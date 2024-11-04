@@ -1,47 +1,88 @@
 #!/usr/bin/env python3
-"""Client for accessing GitHub organization information"""
+"""A module for testing utilities."""
+import unittest
+from typing import Any, Dict, Tuple
+from unittest.mock import patch, Mock
+from parameterized import parameterized
 
-from typing import List, Dict
-from utils import get_json, access_nested_map, memoize
+from utils import (
+    access_nested_map,
+    get_json,
+    memoize,
+)
 
 
-class GithubOrgClient:
-    """GitHub organization client for handling API requests"""
+class TestNestedMapAccess(unittest.TestCase):
+    """Tests for the access_nested_map function."""
 
-    ORG_URL = "https://api.github.com/orgs/{org}"
+    @parameterized.expand([
+        ({"x": 10}, ("x",), 10),
+        ({"x": {"y": 5}}, ("x",), {"y": 5}),
+        ({"x": {"y": 5}}, ("x", "y"), 5),
+    ])
+    def test_access_nested_map(
+            self,
+            nested_map: Dict[str, Any],
+            path: Tuple[str, ...],
+            expected: Any
+    ) -> None:
+        """Ensures access_nested_map produces expected output."""
+        self.assertEqual(access_nested_map(nested_map, path), expected)
 
-    def __init__(self, org_name: str) -> None:
-        """Initialize with organization name"""
-        self._org_name = org_name
+    @parameterized.expand([
+        ({}, ("x",), KeyError),
+        ({"x": 10}, ("x", "y"), KeyError),
+    ])
+    def test_access_nested_map_exception(
+            self,
+            nested_map: Dict[str, Any],
+            path: Tuple[str, ...],
+            exception: Exception
+    ) -> None:
+        """Checks if access_nested_map raises expected exceptions."""
+        with self.assertRaises(exception):
+            access_nested_map(nested_map, path)
 
-    @memoize
-    def org(self) -> Dict:
-        """Retrieve and memoize organization data"""
-        return get_json(self.ORG_URL.format(org=self._org_name))
 
-    @property
-    def _public_repos_url(self) -> str:
-        """URL for fetching public repositories"""
-        return self.org.get("repos_url", "")
+class TestJsonFetch(unittest.TestCase):
+    """Tests for the get_json function."""
 
-    @memoize
-    def repos_payload(self) -> Dict:
-        """Fetch and memoize repositories payload"""
-        return get_json(self._public_repos_url)
+    @parameterized.expand([
+        ("http://test.com", {"key": "value"}),
+        ("http://anotherurl.com", {"result": False}),
+    ])
+    def test_get_json(
+            self,
+            url: str,
+            response_payload: Dict[str, Any]
+    ) -> None:
+        """Tests that get_json returns the correct JSON response."""
+        mock_attributes = {'json.return_value': response_payload}
+        with patch("requests.get", return_value=Mock(**mock_attributes)) as req_get:
+            self.assertEqual(get_json(url), response_payload)
+            req_get.assert_called_once_with(url)
 
-    def public_repos(self, license: str = None) -> List[str]:
-        """Retrieve public repositories with optional license filter"""
-        repos_data = self.repos_payload
-        return [
-            repo["name"] for repo in repos_data
-            if license is None or self.has_license(repo, license)
-        ]
 
-    @staticmethod
-    def has_license(repo: Dict, license_key: str) -> bool:
-        """Check if repository has a specified license"""
-        assert license_key, "license_key must not be None"
-        try:
-            return access_nested_map(repo, ("license", "key")) == license_key
-        except KeyError:
-            return False
+class TestMemoization(unittest.TestCase):
+    """Tests for the memoize function."""
+
+    def test_memoize(self) -> None:
+        """Tests memoize decorator caching behavior."""
+
+        class SampleClass:
+            def compute_value(self) -> int:
+                return 99
+
+            @memoize
+            def cached_value(self) -> int:
+                return self.compute_value()
+
+        with patch.object(
+                SampleClass,
+                "compute_value",
+                return_value=99
+        ) as mock_method:
+            instance = SampleClass()
+            self.assertEqual(instance.cached_value(), 99)
+            self.assertEqual(instance.cached_value(), 99)
+            mock_method.assert_called_once()
