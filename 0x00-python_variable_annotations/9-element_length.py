@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-"""Defines a function with annotated parameters
-and return values using appropriate types.
+"""Defines a function with type-annotated parameters
+and return values for sequences.
 """
 
-from typing import List, Tuple, Sequence, Iterable
+from typing import Iterable, Sequence, List, Tuple
 
 
-def element_length(items: Iterable[Sequence]) -> List[Tuple[Sequence, int]]:
-    """Returns a list of tuples containing each sequence
-    from the input and its corresponding length.
+def element_length(collection: Iterable[Sequence]) -> List[Tuple[Sequence, int]]:
+    """Computes the length of each sequence in an iterable
+    and returns a list of tuples containing the sequence
+    and its corresponding length.
     """
-    return [(item, len(item)) for item in items]
+    return [(item, len(item)) for item in collection]
