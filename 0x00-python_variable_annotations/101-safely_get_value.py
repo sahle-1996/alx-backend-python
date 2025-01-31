@@ -1,10 +1,19 @@
-#!/usr/bin/env python3
-"""Augment the code with the correct duck-typed annotations."""
-
-from typing import List, Any, Sequence, Union
+from typing import Tuple, Any, Union, Sequence, List
 
 
-def safe_first_element(lst: Sequence[Any]) -> Union[Any, None]:
-    """Return the first element of a sequence or None if it's empty."""
+def zoom_array(lst: Sequence[int], factor: Union[int, float] = 2) -> Tuple[Union[int, float], ...]:
+    """Expands each element in lst by a given factor and returns a tuple."""
 
-    return lst[0] if lst else None
+    factor = int(factor) if isinstance(factor, float) else factor
+    zoomed_in: List[Union[int, float]] = [
+        num for num in lst
+        for _ in range(factor)
+    ]
+    return tuple(zoomed_in)
+
+
+array = [12, 72, 91]
+
+zoom_2x = zoom_array(array)
+
+zoom_3x = zoom_array(array, 3.0)
