@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""
-This script defines a type-annotated function
-that takes a string and a numeric value (int or float),
-and returns a tuple.
+""" Script defining a type-annotated function
+that accepts a string and a numeric value,
+returning a tuple with the string and squared value.
 """
 
-from typing import Union, Tuple
+from typing import Tuple, Union
 
-def pair_with_square(key: str, value: Union[int, float]) -> Tuple[str, float]:
-    """Accepts a string and an int or float, and returns
-    a tuple where the first element is the string and the second
-    element is the square of the numeric value as a float."""
-    
-    return key, float(value ** 2)
+
+def to_kv(k: str, v: Union[int, float]) -> Tuple[str, float]:
+    """ Returns a tuple where:
+    - The first element is the input string `k`.
+    - The second element is the square of `v` as a float.
+    """
+    return (k, float(v) ** 2)
